@@ -8,27 +8,52 @@
 import SwiftUI
 
 struct ToDoListView: View {
-    
-    var toDos = ["Learn Swift",
-                 "Build Apps",
-                 "Change the World",
-                 "Bring the Awesome",
-                 "Take a Vacation"]
+    @State private var sheetIsPresented = false
+    @EnvironmentObject private var toDosVM: ToDosViewModel
     
     var body: some View {
         NavigationStack {
             List {
-                ForEach(toDos, id: \.self) { toDo in
+                ForEach(toDosVM.toDos) { toDo in
                     NavigationLink {
-                        DetailedView(passedValue: toDo)
+                        DetailedView(toDo: toDo)
                     } label: {
-                        Text(toDo)
+                        Text(toDo.item)
                     }
+                    .font(.title2)
                 }
+                .onDelete(perform: toDosVM.deleteToDo) // short
+                .onMove(perform: toDosVM.moveToDo) // short
+                /* TRADITIONAL
+                .onDelete(perform: { indexSet in
+                    toDosVM.delete(indexSet: indexSet)
+                })
+                .onMove(perform: { indices, newOffset in
+                    toDosVM.move(indices: indices, newOffset: newOffset)
+                })
+                */
             }
             .navigationTitle("To Do List")
             .navigationBarTitleDisplayMode(.automatic)
             .listStyle(.plain)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    EditButton()
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        sheetIsPresented.toggle()
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
+            .sheet(isPresented: $sheetIsPresented) {
+            //.fullScreenCover(isPresented: $sheetIsPresented) {
+                NavigationStack {
+                    DetailedView(toDo: ToDo())
+                }
+            }
         }
     }
 }
@@ -36,6 +61,7 @@ struct ToDoListView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ToDoListView()
+            .environmentObject(ToDosViewModel())
     }
 }
 
